@@ -25,11 +25,11 @@ int main() {
         for (int j = 0; j < image.rows / 16; j++)
         {
             cv::Rect patch(i * 16, j * 16, 16, 16);
-            labels_mat(patch) = color_tab[labels.at<unsigned char>(0, i * image.rows / 16 + j)];
+            labels_mat(patch) = color_tab[labels.at<int>(0, i * image.rows / 16 + j)];
         }
     }
 
-    cv::imwrite("labels mat 2 custom.png", labels_mat);
+    cv::imwrite("../data/labels_mat_2_custom.png", labels_mat);
     cv::waitKey(0);
 
     return 0;
