@@ -7,18 +7,12 @@ int main() {
 
     auto res = lbp(image);
 
-    auto [centers, labels] = kmeans(16, res);
+    std::array<cv::Scalar, 16> color_tab;
+    cv::RNG rng(13);
+    for (int i = 0; i < color_tab.size(); i++)
+        color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 
-    cv::Scalar color_tab[] = {
-            cv::Scalar(0, 0, 255),
-            cv::Scalar(0,255,0),
-            cv::Scalar(255,100,100),
-            cv::Scalar(255,0,255),
-            cv::Scalar(0,255,255),
-            cv::Scalar(255,0,0),
-            cv::Scalar(255,255,0),
-            cv::Scalar(255,255,255)
-    };
+    auto [centers, labels] = kmeans(16, res);
 
     cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
 
