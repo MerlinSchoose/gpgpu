@@ -1,36 +1,46 @@
+#include <CLI/CLI.hpp>
+
 #include "../include/lbp.hh"
-#include "../include/train_kmeans.hh"
-#include "../include/nearest_neighbour.hh"
 
-int main() {
-    cv::Mat image = cv::imread("../data/barcode-00-02.jpg",
-            cv::IMREAD_GRAYSCALE);
 
-    auto res = lbp(image);
-    res.convertTo(res, CV_32F);
+/*
+ * ./exe -m GPU 
+ * ./exe -m CPU
+ */
+int main(int argc, char** argv)
+ {
+   (void) argc;
+   (void) argv;
+  
+   std::string filename = "../results/output.png";
+   std::string inputfilename = "../data/barcode-00-01.jpg";
+   std::string mode = "GPU";
+  
+   CLI::App app{"gpgpu"};
+   app.add_option("-i", inputfilename, "Input image");
+   app.add_set("-m", mode, {"GPU", "CPU"}, "Either 'GPU' or 'CPU'");
+  
+   CLI11_PARSE(app, argc, argv);
+  
+   // Rendering
+   cv::Mat labels_mat;
+   if (mode == "CPU")
+   {
+     labels_mat = cpu_lbp(inputfilename);
+   }
+   else if (mode == "GPU")
+   {
+     labels_mat = gpu_lbp(inputfilename);
+   }
+   else
+   {
+       printf("Invalid argument");
+       return 1;
+   }
 
-    std::array<cv::Scalar, 16> color_tab;
-    cv::RNG rng(13);
-    for (int i = 0; i < color_tab.size(); i++)
-        color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-
-    auto [centers, labels] = kmeans(16, res);
-
-    labels = nearest_neighbour(res, centers);
-
-    cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
-
-    for (int i = 0; i < image.cols / 16; i++)
-    {
-        for (int j = 0; j < image.rows / 16; j++)
-        {
-            cv::Rect patch(i * 16, j * 16, 16, 16);
-            labels_mat(patch) = color_tab[labels.at<int>(0, i * image.rows / 16 + j)];
-        }
-    }
-
-    cv::imwrite("../results/labels_mat_2_custom.png", labels_mat);
-    cv::waitKey(0);
-
-    return 0;
-}
+   // Save
+   cv::imwrite(filename, labels_mat);
+   printf("Output saved in %s.", filename);
+   return 0;
+ }
+  

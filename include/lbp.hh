@@ -13,3 +13,7 @@ void build_histogram(const std::vector<unsigned char>& textonz,
         cv::Mat mat, int i, int j);
 
 cv::Mat lbp(cv::Mat image);
+
+
+cv::Mat cpu_lbp(std::string inputfilename);
+cv::Mat gpu_lbp(std::string inputfilename);
