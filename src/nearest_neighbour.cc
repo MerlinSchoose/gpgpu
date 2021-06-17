@@ -1,4 +1,4 @@
-#include "../include/nearest_neighbour.hh"
+#include "nearest_neighbour.hh"
 
 #include <limits>
 

@@ -1,4 +1,4 @@
-#include "../include/train_kmeans.hh"
+#include "train_kmeans.hh"
 
 std::pair<cv::Mat, cv::Mat> kmeans(size_t k, cv::Mat lbp)
 {

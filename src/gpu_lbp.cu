@@ -1,6 +1,6 @@
-#include "../include/lbp.hh"
+#include "gpu_lbp.hh"
 
-cv::Mat gpu_lbp(std::string inputfilename)
+std::vector<unsigned char> gpu_lbp(std::vector<unsigned char> image)
 {
-  return cv::Mat();
+  return image;
 }

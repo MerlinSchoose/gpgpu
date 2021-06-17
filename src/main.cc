@@ -1,6 +1,8 @@
 #include <CLI/CLI.hpp>
-
-#include "../include/lbp.hh"
+#include <spdlog/spdlog.h>
+#include "lbp.hh"
+#include "gpu_lbp.hh"
+#include "utils.hh"
 
 
 /*
@@ -23,24 +25,28 @@ int main(int argc, char** argv)
    CLI11_PARSE(app, argc, argv);
   
    // Rendering
+   cv::Mat image = cv::imread(inputfilename,
+       cv::IMREAD_GRAYSCALE);
+
+
    cv::Mat labels_mat;
    if (mode == "CPU")
    {
-     labels_mat = cpu_lbp(inputfilename);
+     labels_mat = cpu_lbp(image);
    }
    else if (mode == "GPU")
    {
-     labels_mat = gpu_lbp(inputfilename);
+     labels_mat = vect_to_mat(gpu_lbp(mat_to_vect(image)));
    }
    else
    {
-       printf("Invalid argument");
+     spdlog::info("Invalid argument");
        return 1;
    }
 
    // Save
    cv::imwrite(filename, labels_mat);
-   printf("Output saved in %s.", filename);
+   spdlog::info("Output saved in {}.", filename);
    return 0;
  }
   

@@ -1,13 +1,10 @@
-#include "../include/lbp.hh"
-#include "../include/train_kmeans.hh"
-#include "../include/nearest_neighbour.hh"
+#include "lbp.hh"
+#include "train_kmeans.hh"
+#include "nearest_neighbour.hh"
 
 
-cv::Mat cpu_lbp(std::string inputfilename)
+cv::Mat cpu_lbp(cv::Mat image)
 {
-    cv::Mat image = cv::imread(inputfilename,
-            cv::IMREAD_GRAYSCALE);
-
     auto res = lbp(image);
     res.convertTo(res, CV_32F);
 
