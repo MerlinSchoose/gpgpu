@@ -13,7 +13,7 @@ cv::Mat cpu_lbp(std::string inputfilename)
 
     std::array<cv::Scalar, 16> color_tab;
     cv::RNG rng(13);
-    for (int i = 0; i < color_tab.size(); i++)
+    for (size_t i = 0; i < color_tab.size(); i++)
         color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
 
     auto [centers, labels] = kmeans(16, res);

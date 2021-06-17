@@ -58,7 +58,7 @@ std::array<unsigned char, HISTO_SIZE> build_histogram(
 {
     std::array<unsigned char, HISTO_SIZE> histo{ 0 };
 
-    for (int i = 0; i < textonz.size(); ++i)
+    for (size_t i = 0; i < textonz.size(); ++i)
         histo[textonz[i]]++;
 
     return histo;
