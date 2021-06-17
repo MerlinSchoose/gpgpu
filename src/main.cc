@@ -29,7 +29,7 @@ int main() {
         }
     }
 
-    cv::imwrite("../data/labels_mat_2_custom.png", labels_mat);
+    cv::imwrite("../results/labels_mat_2_custom.png", labels_mat);
     cv::waitKey(0);
 
     return 0;
