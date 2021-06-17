@@ -1,9 +1,9 @@
 #include <CLI/CLI.hpp>
 #include <spdlog/spdlog.h>
+
 #include "lbp.hh"
 #include "gpu_lbp.hh"
 #include "utils.hh"
-
 
 /*
  * ./exe -m GPU 
@@ -13,30 +13,35 @@ int main(int argc, char** argv)
  {
    (void) argc;
    (void) argv;
-  
+
    std::string filename = "../results/output.png";
    std::string inputfilename = "../data/barcode-00-01.jpg";
    std::string mode = "GPU";
-  
+
    CLI::App app{"gpgpu"};
    app.add_option("-i", inputfilename, "Input image");
    app.add_set("-m", mode, {"GPU", "CPU"}, "Either 'GPU' or 'CPU'");
-  
-   CLI11_PARSE(app, argc, argv);
-  
-   // Rendering
-   cv::Mat image = cv::imread(inputfilename,
-       cv::IMREAD_GRAYSCALE);
 
+   CLI11_PARSE(app, argc, argv);
+
+   // Rendering
+   cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
    cv::Mat labels_mat;
    if (mode == "CPU")
    {
-     labels_mat = cpu_lbp(image);
+       labels_mat = cpu_lbp(image);
    }
    else if (mode == "GPU")
    {
-     labels_mat = vect_to_mat(gpu_lbp(mat_to_vect(image)));
+       unsigned char *image_buffer = ((unsigned char *)
+               malloc(image.total() * sizeof(unsigned char)));
+
+       gpu_lbp(mat_to_bytes(image), image.cols, image.rows, image_buffer);
+       labels_mat = bytes_to_mat(image_buffer, image.rows, image.cols,
+               image.type());
+
+       free(image_buffer);
    }
    else
    {
@@ -49,4 +54,3 @@ int main(int argc, char** argv)
    spdlog::info("Output saved in {}.", filename);
    return 0;
  }
-  

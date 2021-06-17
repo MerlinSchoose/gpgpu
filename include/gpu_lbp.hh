@@ -3,4 +3,5 @@
 #include <vector>
 #include <string>
 
-std::vector<unsigned char> gpu_lbp(std::vector<unsigned char> image);
+void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
+        unsigned char *image_buffer);
