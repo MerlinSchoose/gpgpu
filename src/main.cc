@@ -3,6 +3,7 @@
 
 #include "cpu_lbp.hh"
 #include "gpu_lbp.hh"
+#include "render.hh"
 #include "utils.hh"
 
 /*
@@ -27,30 +28,38 @@ int main(int argc, char** argv)
     // Rendering
     cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
-    cv::Mat labels_mat;
+    size_t rows = ((image.cols + TILE_SIZE - 1) / TILE_SIZE)
+        * ((image.rows + TILE_SIZE - 1) / TILE_SIZE);
+    size_t cols = HISTO_SIZE;
+
+    unsigned char *histos_buffer = (unsigned char *)
+        malloc(rows * cols * sizeof(unsigned char));
+
+    cv::Mat histos_mat;
+
     if (mode == "CPU")
     {
-        labels_mat = cpu_lbp(image);
+        histos_mat = cpu_lbp(image);
     }
     else if (mode == "GPU")
     {
-        unsigned char *image_buffer = ((unsigned char *)
-                malloc(image.total() * sizeof(unsigned char)));
+        gpu_lbp(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
+        histos_mat = bytes_to_mat(histos_buffer, cols, rows, image.type());
 
-        gpu_lbp(mat_to_bytes(image), image.cols, image.rows, image_buffer);
-        labels_mat = bytes_to_mat(image_buffer, image.rows, image.cols,
-                image.type());
-
-        free(image_buffer);
     }
     else
     {
-        spdlog::info("Invalid argument");
+        std::cerr << "Invalid argument";
         return 1;
     }
 
+    auto labels_mat = render(image, histos_mat);
+
     // Save
     cv::imwrite(filename, labels_mat);
-    spdlog::info("Output saved in {}.", filename);
+    std::cout << "Output saved in " << filename << ".\n";
+
+    free(histos_buffer);
+
     return 0;
 }

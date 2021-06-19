@@ -21,8 +21,8 @@ unsigned char* mat_to_bytes(cv::Mat image)
     return image_uchar;
 }
 
-cv::Mat bytes_to_mat(unsigned char* image_uchar, int image_rows,
-        int image_cols, int image_type)
+cv::Mat bytes_to_mat(unsigned char* image_uchar, int image_cols,
+        int image_rows, int image_type)
 {
     cv::Mat image(image_rows, image_cols, image_type, image_uchar,
             cv::Mat::AUTO_STEP);

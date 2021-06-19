@@ -37,14 +37,13 @@ find_package(OpenCV REQUIRED)
 add_library(lbp_lib SHARED src/gpu_lbp.cu)
 target_compile_features(lbp_lib PUBLIC cxx_std_17)
 set_target_properties(lbp_lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-target_link_libraries(lbp_lib spdlog::spdlog)
 
 add_executable(test
         src/main.cc
-        src/lbp.cc
+        src/render.cc
+        src/cpu_lbp.cc
         src/train_kmeans.cc
         src/nearest_neighbour.cc
-        src/cpu_lbp.cc
         src/utils.cc
         )
 target_compile_features(test PUBLIC cxx_std_17)
@@ -57,10 +56,10 @@ target_link_libraries(test
 
 add_executable(bench
         src/benchmark.cc
-        src/lbp.cc
+        src/render.cc
+        src/cpu_lbp.cc
         src/train_kmeans.cc
         src/nearest_neighbour.cc
-        src/cpu_lbp.cc
         src/utils.cc
         )
 target_compile_features(bench PUBLIC cxx_std_17)

@@ -2,10 +2,7 @@
 
 #include "gpu_lbp.hh"
 
-#define THREADS_SIZE 32
-#define TILE_SIZE 16
-
-/* [[gnu::noinline]]
+[[gnu::noinline]]
 void _abortError(const char* msg, const char* fname, int line)
 {
   cudaError_t err = cudaGetLastError();
@@ -14,7 +11,56 @@ void _abortError(const char* msg, const char* fname, int line)
   std::exit(1);
 }
 
-#define abortError(msg) _abortError(msg, __FUNCTION__, __LINE__) */
+#define abortError(msg) _abortError(msg, __FUNCTION__, __LINE__)
+
+__device__ unsigned char get(unsigned char patch[TILE_SIZE][TILE_SIZE], int i,
+        int j)
+{
+    return (i < 0 || j < 0 || i >= TILE_SIZE || j >= TILE_SIZE)
+        ? 0 : patch[j][i];
+}
+
+__device__ unsigned char get_texton(unsigned char patch[TILE_SIZE][TILE_SIZE],
+        int i, int j)
+{
+    unsigned char value = patch[j][i];
+
+    unsigned char texton = get(patch, i - 1, j - 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i - 1, j) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i - 1, j + 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i, j + 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i + 1, j + 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i + 1, j) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i + 1, j - 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i, j - 1) >= value;
+
+    return texton;
+}
+
+__global__ void kernel(unsigned char* image, int width, int height,
+        size_t pitch, unsigned char *histos_buffer, size_t pitch_buffer) {
+    __shared__ unsigned char tile[TILE_SIZE][TILE_SIZE];
+    __shared__ unsigned char textonz[TILE_SIZE * TILE_SIZE];
+    __shared__ unsigned histo[HISTO_SIZE];
+
+    if (threadIdx.x == 0 && threadIdx.y == 0) {
+        for (size_t i = 0; i < HISTO_SIZE; ++i)
+            histo[i] = 0;
+    }
 
 __global__ void kernel(unsigned char* buffer, int width, int height,
         size_t pitch) {
@@ -40,31 +86,52 @@ void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
         unsigned char *image_buffer) {
     cudaError_t error = cudaSuccess;
 
-    size_t pitch;
-    error = cudaMallocPitch(&image, &pitch, image_cols * sizeof(unsigned char),
-            image_rows);
-
-    /* if (error)
-        abortError("Fail buffer allocation"); */
-
-    dim3 threads(THREADS_SIZE, THREADS_SIZE);
+    dim3 threads(TILE_SIZE, TILE_SIZE);
     dim3 blocks((image_cols + threads.x - 1) / threads.x,
             (image_rows + threads.y - 1) / threads.y);
 
-    kernel<<<blocks, threads>>>(image, image_cols, image_rows, pitch);
+    size_t pitch_image;
+    size_t pitch_histos;
+    unsigned char *dev_image;
+    unsigned char *dev_histos;
 
-    /* if (cudaPeekAtLastError())
-        abortError("Computation Error"); */
+    error = cudaMallocPitch(&dev_histos, &pitch_histos,
+            HISTO_SIZE, blocks.x * blocks.y * sizeof(unsigned char));
 
-    error = cudaMemcpy2D(image_buffer, image_cols * sizeof(unsigned char),
-            image, pitch, image_cols * sizeof(unsigned char), image_rows,
+    if (error)
+        abortError("Fail buffer allocation");
+
+    error = cudaMallocPitch(&dev_image, &pitch_image,
+            image_cols * sizeof(unsigned char), image_rows);
+
+    if (error)
+        abortError("Fail buffer allocation");
+
+    error = cudaMemcpy2D(dev_image, pitch_image, image,
+            image_cols * sizeof(unsigned char),
+            image_cols * sizeof(unsigned char), image_rows,
+            cudaMemcpyHostToDevice);
+
+    if (error)
+        abortError("Fail buffer copy to device");
+
+    kernel<<<blocks, threads>>>(dev_image, image_cols, image_rows, pitch_image,
+            dev_histos, pitch_histos);
+
+    if (cudaPeekAtLastError())
+        abortError("Computation Error");
+
+    error = cudaMemcpy2D(histos_buffer, HISTO_SIZE, dev_histos,
+            pitch_histos, HISTO_SIZE,
+            blocks.x * blocks.y * sizeof(unsigned char),
             cudaMemcpyDeviceToHost);
 
-    /* if (error)
-        abortError("Unable to copy buffer back to memory"); */
+    if (error)
+        abortError("Unable to copy buffer back to memory");
 
-    error = cudaFree(image);
+    error = cudaFree(dev_image);
+    error = cudaFree(dev_histos);
 
-    /* if (error)
-        abortError("Unable to free memory"); */
+    if (error)
+        abortError("Unable to free memory");
 }

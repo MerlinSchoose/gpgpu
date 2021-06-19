@@ -12,6 +12,4 @@ std::vector<unsigned char> textonize(cv::Mat patch);
 void build_histogram(const std::vector<unsigned char>& textonz,
         cv::Mat mat, int i, int j);
 
-cv::Mat lbp(cv::Mat image);
-
 cv::Mat cpu_lbp(cv::Mat image);
