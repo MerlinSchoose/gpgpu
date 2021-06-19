@@ -45,7 +45,6 @@ int main(int argc, char** argv)
     {
         gpu_lbp(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
         histos_mat = bytes_to_mat(histos_buffer, cols, rows, image.type());
-
     }
     else
     {
@@ -57,7 +56,7 @@ int main(int argc, char** argv)
 
     // Save
     cv::imwrite(filename, labels_mat);
-    std::cout << "Output saved in " << filename << ".\n";
+    std::cout << "Output saved in " << filename << "." << std::endl;
 
     free(histos_buffer);
 

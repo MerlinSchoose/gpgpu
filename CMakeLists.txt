@@ -31,6 +31,7 @@ FetchContent_MakeAvailable(CLI11)
 include_directories(include)
 
 set(CMAKE_CXX_FlAGS "-g")
+set(CMAKE_DEBUG_CXX_FlAGS "-fsanitize=address")
 
 find_package(OpenCV REQUIRED)
 

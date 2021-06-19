@@ -40,7 +40,7 @@ unsigned char get_texton(cv::Mat patch, int i, int j)
 
 std::vector<unsigned char> textonize(cv::Mat patch)
 {
-    std::vector<unsigned char> textonZ(patch.cols * patch.rows);
+    std::vector<unsigned char> textonZ;
 
     for (int i = 0; i < patch.cols; ++i)
     {

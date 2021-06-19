@@ -3,7 +3,8 @@
 
 cv::Mat render(cv::Mat image, cv::Mat histos)
 {
-    histos.convertTo(histos, CV_32F);
+    cv::Mat histos_f32;
+    histos.convertTo(histos_f32, CV_32F);
 
     std::array<cv::Scalar, 16> color_tab;
     cv::RNG rng(13);
@@ -11,9 +12,9 @@ cv::Mat render(cv::Mat image, cv::Mat histos)
         color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
                 rng.uniform(0, 255));
 
-    auto [centers, labels_k] = kmeans(16, histos);
+    auto [centers, labels_k] = kmeans(16, histos_f32);
 
-    auto labels = nearest_neighbour(histos, centers);
+    auto labels = nearest_neighbour(histos_f32, centers);
 
     cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
 

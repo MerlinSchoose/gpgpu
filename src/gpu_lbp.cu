@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 
 #include "gpu_lbp.hh"
 
@@ -70,18 +71,22 @@ __global__ void kernel(unsigned char* image, int width, int height,
         return;
 
     tile[threadIdx.x][threadIdx.y] = image[x + y * pitch];
+    __syncthreads();
 
-    textonz[threadIdx.x + threadIdx.y * blockDim.x] = get_texton(tile, 
-            threadIdx.x, threadIdx.y);
+    assert(threadIdx.x + threadIdx.y * blockDim.x < TILE_SIZE * TILE_SIZE);
+    textonz[threadIdx.x + threadIdx.y * blockDim.x] = get_texton(tile,
+            threadIdx.y, threadIdx.x);
+    __syncthreads();
 
     atomicAdd(&(histo[textonz[threadIdx.x + threadIdx.y * blockDim.x]]), 1);
-
-    unsigned char *lineptr = histos_buffer + blockIdx.x + blockIdx.y
-        * (pitch / blockDim.x);
+    __syncthreads();
 
     if (threadIdx.x == 0 && threadIdx.y == 0) {
+        unsigned char *lineptr = histos_buffer + (blockIdx.x + blockIdx.y
+            * ((width) / blockDim.x)) * pitch_buffer;
+
         for (size_t i = 0; i < HISTO_SIZE; ++i)
-            lineptr[i] = histo[i];
+            lineptr[i] = (unsigned char) histo[i];
     }
 }
 
@@ -120,6 +125,7 @@ void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
 
     kernel<<<blocks, threads>>>(dev_image, image_cols, image_rows, pitch_image,
             dev_histos, pitch_histos);
+    cudaDeviceSynchronize();
 
     if (cudaPeekAtLastError())
         abortError("Computation Error");
