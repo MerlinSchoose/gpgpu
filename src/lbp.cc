@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "lbp.hh"
+#include "cpu_lbp.hh"
 
 unsigned char get(cv::Mat patch, int i, int j)
 {

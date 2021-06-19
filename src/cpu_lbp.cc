@@ -1,7 +1,6 @@
-#include "lbp.hh"
+#include "cpu_lbp.hh"
 #include "train_kmeans.hh"
 #include "nearest_neighbour.hh"
-
 
 cv::Mat cpu_lbp(cv::Mat image)
 {

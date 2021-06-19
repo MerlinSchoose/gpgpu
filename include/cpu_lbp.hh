@@ -14,5 +14,4 @@ void build_histogram(const std::vector<unsigned char>& textonz,
 
 cv::Mat lbp(cv::Mat image);
 
-
 cv::Mat cpu_lbp(cv::Mat image);

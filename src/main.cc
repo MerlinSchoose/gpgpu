@@ -1,7 +1,7 @@
 #include <CLI/CLI.hpp>
 #include <spdlog/spdlog.h>
 
-#include "lbp.hh"
+#include "cpu_lbp.hh"
 #include "gpu_lbp.hh"
 #include "utils.hh"
 
