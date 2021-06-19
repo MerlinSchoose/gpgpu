@@ -1,14 +1,15 @@
-// #include <spdlog/spdlog.h>
+#include <iostream>
 
 #include "gpu_lbp.hh"
 
 [[gnu::noinline]]
 void _abortError(const char* msg, const char* fname, int line)
 {
-  cudaError_t err = cudaGetLastError();
-  spdlog::error("{} ({}, line: {})", msg, fname, line);
-  spdlog::error("Error {}: {}", cudaGetErrorName(err), cudaGetErrorString(err));
-  std::exit(1);
+    cudaError_t err = cudaGetLastError();
+    std::cerr << msg << " (" << fname << ", line: " << line << ")\n";
+    std::cerr << "Error " << cudaGetErrorName(err) << ": "
+        << cudaGetErrorString(err) << "\n";
+    std::exit(1);
 }
 
 #define abortError(msg) _abortError(msg, __FUNCTION__, __LINE__)
@@ -62,28 +63,30 @@ __global__ void kernel(unsigned char* image, int width, int height,
             histo[i] = 0;
     }
 
-__global__ void kernel(unsigned char* buffer, int width, int height,
-        size_t pitch) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
-    if (x >= width || y >= height || x % 16 != 0 || y % 16 != 0)
+    if (x >= width || y >= height)
         return;
 
-    unsigned char color = (x + y) % 255;
+    tile[threadIdx.x][threadIdx.y] = image[x + y * pitch];
 
-    for(int i = x; i < x + TILE_SIZE; ++i)
-    {
-        for(int j = y; j < y + TILE_SIZE; ++j)
-        {
-            unsigned char *lineptr = (unsigned char *) (buffer + j * pitch);
-            lineptr[i] = color;
-        }
+    textonz[threadIdx.x + threadIdx.y * blockDim.x] = get_texton(tile, 
+            threadIdx.x, threadIdx.y);
+
+    atomicAdd(&(histo[textonz[threadIdx.x + threadIdx.y * blockDim.x]]), 1);
+
+    unsigned char *lineptr = histos_buffer + blockIdx.x + blockIdx.y
+        * (pitch / blockDim.x);
+
+    if (threadIdx.x == 0 && threadIdx.y == 0) {
+        for (size_t i = 0; i < HISTO_SIZE; ++i)
+            lineptr[i] = histo[i];
     }
 }
 
 void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
-        unsigned char *image_buffer) {
+        unsigned char *histos_buffer) {
     cudaError_t error = cudaSuccess;
 
     dim3 threads(TILE_SIZE, TILE_SIZE);

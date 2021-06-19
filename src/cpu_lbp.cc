@@ -2,25 +2,49 @@
 #include "train_kmeans.hh"
 #include "nearest_neighbour.hh"
 
-cv::Mat cpu_lbp(cv::Mat image)
+unsigned char get(cv::Mat patch, int i, int j)
 {
-    auto res = lbp(image);
-    res.convertTo(res, CV_32F);
+    return (i < 0 || j < 0 || i >= patch.cols || j >= patch.rows)
+        ? 0 : patch.at<unsigned char>(i, j);
+}
 
-    std::array<cv::Scalar, 16> color_tab;
-    cv::RNG rng(13);
-    for (size_t i = 0; i < color_tab.size(); i++)
-        color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+unsigned char get_texton(cv::Mat patch, int i, int j)
+{
+    unsigned char value = patch.at<unsigned char>(i, j);
 
-    auto [centers, labels] = kmeans(16, res);
+    unsigned char texton = get(patch, i - 1, j - 1) >= value;
+    texton <<= 1;
 
-    labels = nearest_neighbour(res, centers);
+    texton |= get(patch, i - 1, j) >= value;
+    texton <<= 1;
 
-    cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
+    texton |= get(patch, i - 1, j + 1) >= value;
+    texton <<= 1;
 
-    for (int i = 0; i < image.cols / 16; i++)
+    texton |= get(patch, i, j + 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i + 1, j + 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i + 1, j) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i + 1, j - 1) >= value;
+    texton <<= 1;
+
+    texton |= get(patch, i, j - 1) >= value;
+
+    return texton;
+}
+
+std::vector<unsigned char> textonize(cv::Mat patch)
+{
+    std::vector<unsigned char> textonZ(patch.cols * patch.rows);
+
+    for (int i = 0; i < patch.cols; ++i)
     {
-        for (int j = 0; j < image.rows / 16; j++)
+        for (int j = 0; j < patch.rows; ++j)
         {
             textonZ.push_back(get_texton(patch, i, j));
         }
@@ -69,5 +93,5 @@ cv::Mat cpu_lbp(cv::Mat image)
         }
     }
 
-    return labels_mat;
+    return result;
 }
