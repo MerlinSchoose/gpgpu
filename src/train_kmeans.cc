@@ -1,4 +1,5 @@
 #include "train_kmeans.hh"
+#include "serialize.hh"
 
 std::pair<cv::Mat, cv::Mat> kmeans(size_t k, cv::Mat lbp)
 {

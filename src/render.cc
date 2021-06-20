@@ -1,5 +1,5 @@
-#include "train_kmeans.hh"
 #include "nearest_neighbour.hh"
+#include "serialize.hh"
 
 #define TILE_SIZE 16
 
@@ -14,9 +14,13 @@ cv::Mat render(cv::Mat image, cv::Mat histos)
         color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
                 rng.uniform(0, 255));
 
-    auto [centers, labels_k] = kmeans(16, histos_f32);
+    cv::Mat centers;
+    deserializeMat(centers, "../results/.centroids");
 
-    auto labels = nearest_neighbour(histos_f32, centers);
+   auto labels = nearest_neighbour(histos_f32, centers);
+   std::cout << labels.cols << std::endl;
+   std::cout << labels.rows << std::endl;
+   std::cout << labels.type() << std::endl;
 
     cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
 
@@ -25,7 +29,11 @@ cv::Mat render(cv::Mat image, cv::Mat histos)
         for (int j = 0; j < (image.cols) / TILE_SIZE; j++)
         {
             cv::Rect patch(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            labels_mat(patch) = color_tab[labels.at<int>(0, i * (image.cols) / TILE_SIZE + j)];
+            auto index = labels.at<int>(0, i * (image.cols) / TILE_SIZE + j);
+            if (index < 0 || index >= 16)
+                std::cout << index << std::endl;
+
+            labels_mat(patch) = color_tab[index];
         }
     }
 

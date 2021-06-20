@@ -24,7 +24,6 @@ int main(int argc, char** argv)
 
     CLI11_PARSE(app, argc, argv);
 
-    // Rendering
     cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
     size_t rows = ((image.cols + TILE_SIZE - 1) / TILE_SIZE)
@@ -51,7 +50,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-
+    // Rendering
     auto labels_mat = render(image, histos_mat);
 
     // Save

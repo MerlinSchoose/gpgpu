@@ -4,7 +4,7 @@
 
 cv::Mat nearest_neighbour(const cv::Mat &lbp, const cv::Mat &centroids)
 {
-    cv::Mat labels(lbp.rows, 1, CV_32S);
+    cv::Mat labels;
 
     for (int i = 0; i < lbp.rows; i++)
     {
