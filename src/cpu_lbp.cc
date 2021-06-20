@@ -77,17 +77,17 @@ cv::Mat cpu_lbp(cv::Mat image)
 
     cv::Mat result;
 
-    for (int i = 0; i < width; i += 16)
+    for (int i = 0; i < height; i += 16)
     {
-        for (int j = 0; j < height; j += 16)
+        for (int j = 0; j < width; j += 16)
         {
-            cv::Rect rect(i, j, 16, 16);
+            cv::Rect rect(j, i, 16, 16);
             auto patch = image_reshape(rect);
 
             auto textonz = textonize(patch);
 
             auto histo = build_histogram(textonz);
-            // Potentially normalize histo.
+           // Potentially normalize histo.
 
             result.push_back(cv::Mat(histo).t());
         }
