@@ -1,6 +1,8 @@
 #include "train_kmeans.hh"
 #include "nearest_neighbour.hh"
 
+#define TILE_SIZE 16
+
 cv::Mat render(cv::Mat image, cv::Mat histos)
 {
     cv::Mat histos_f32;
@@ -18,12 +20,12 @@ cv::Mat render(cv::Mat image, cv::Mat histos)
 
     cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
 
-    for (int i = 0; i < image.cols / 16; i++)
+    for (int i = 0; i < (image.rows) / TILE_SIZE; i++)
     {
-        for (int j = 0; j < image.rows / 16; j++)
+        for (int j = 0; j < (image.cols) / TILE_SIZE; j++)
         {
-            cv::Rect patch(i * 16, j * 16, 16, 16);
-            labels_mat(patch) = color_tab[labels.at<int>(0, i * image.rows / 16 + j)];
+            cv::Rect patch(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            labels_mat(patch) = color_tab[labels.at<int>(0, i * (image.cols) / TILE_SIZE + j)];
         }
     }
 
