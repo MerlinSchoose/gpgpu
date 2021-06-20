@@ -18,9 +18,6 @@ cv::Mat render(cv::Mat image, cv::Mat histos)
     deserializeMat(centers, "../results/.centroids");
 
    auto labels = nearest_neighbour(histos_f32, centers);
-   std::cout << labels.cols << std::endl;
-   std::cout << labels.rows << std::endl;
-   std::cout << labels.type() << std::endl;
 
     cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
 
@@ -30,9 +27,6 @@ cv::Mat render(cv::Mat image, cv::Mat histos)
         {
             cv::Rect patch(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             auto index = labels.at<int>(0, i * (image.cols) / TILE_SIZE + j);
-            if (index < 0 || index >= 16)
-                std::cout << index << std::endl;
-
             labels_mat(patch) = color_tab[index];
         }
     }

@@ -7,10 +7,8 @@ __global__ void kernel_opti(unsigned char* image, int width, int height,
     __shared__ unsigned char tile[TILE_SIZE][TILE_SIZE];
     __shared__ unsigned histo[HISTO_SIZE];
 
-    if (threadIdx.x == 0 && threadIdx.y == 0) {
-        for (size_t i = 0; i < HISTO_SIZE; ++i)
-            histo[i] = 0;
-    }
+    auto current_index = threadIdx.x + threadIdx.y * blockDim.x;
+    histo[current_index] = 0;
 
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -21,16 +19,13 @@ __global__ void kernel_opti(unsigned char* image, int width, int height,
     tile[threadIdx.x][threadIdx.y] = image[x + y * pitch];
     __syncthreads();
 
-    atomicInc(&(histo[get_texton(tile,threadIdx.y, threadIdx.x)]), 256);
+    atomicInc(&(histo[get_texton(tile, threadIdx.y, threadIdx.x)]), 256);
     __syncthreads();
 
-    if (threadIdx.x == 0 && threadIdx.y == 0) {
-        unsigned char *lineptr = histos_buffer + (blockIdx.x + blockIdx.y
-                * ((width) / blockDim.x)) * pitch_buffer;
+    unsigned char *lineptr = histos_buffer + (blockIdx.x + blockIdx.y
+            * ((width) / blockDim.x)) * pitch_buffer;
 
-        for (size_t i = 0; i < HISTO_SIZE; ++i)
-            lineptr[i] = (unsigned char) histo[i];
-    }
+    lineptr[current_index] = (unsigned char) histo[current_index];
 }
 
 void gpu_lbp_opti(unsigned char *image, int image_cols, int image_rows,
