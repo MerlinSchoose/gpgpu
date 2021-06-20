@@ -2,13 +2,13 @@
 #include "train_kmeans.hh"
 #include "nearest_neighbour.hh"
 
-unsigned char get(cv::Mat patch, int i, int j)
+unsigned char get(const cv::Mat &patch, int i, int j)
 {
     return (i < 0 || j < 0 || i >= patch.cols || j >= patch.rows)
         ? 0 : patch.at<unsigned char>(i, j);
 }
 
-unsigned char get_texton(cv::Mat patch, int i, int j)
+unsigned char get_texton(const cv::Mat &patch, int i, int j)
 {
     unsigned char value = patch.at<unsigned char>(i, j);
 
@@ -38,7 +38,7 @@ unsigned char get_texton(cv::Mat patch, int i, int j)
     return texton;
 }
 
-std::vector<unsigned char> textonize(cv::Mat patch)
+std::vector<unsigned char> textonize(const cv::Mat &patch)
 {
     std::vector<unsigned char> textonZ;
 
@@ -64,7 +64,7 @@ std::array<unsigned char, HISTO_SIZE> build_histogram(
     return histo;
 }
 
-cv::Mat cpu_lbp(cv::Mat image)
+cv::Mat cpu_lbp(const cv::Mat &image)
 {
     auto height = ((image.rows / 16) + (image.rows % 16 != 0)) * 16;
     auto width = ((image.cols / 16) + (image.cols % 16 != 0)) * 16;

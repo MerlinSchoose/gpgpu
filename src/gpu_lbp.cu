@@ -34,7 +34,10 @@ __global__ void kernel(unsigned char* image, int width, int height,
                 * ((width) / blockDim.x)) * pitch_buffer;
 
         for (size_t i = 0; i < HISTO_SIZE; ++i)
+        {
             lineptr[i] = (unsigned char) histo[i];
+        }
+
     }
 }
 

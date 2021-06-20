@@ -3,7 +3,7 @@
 
 #define TILE_SIZE 16
 
-cv::Mat render(cv::Mat image, cv::Mat histos)
+cv::Mat render(const cv::Mat &image,const cv::Mat &histos)
 {
     cv::Mat histos_f32;
     histos.convertTo(histos_f32, CV_32F);

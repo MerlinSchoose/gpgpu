@@ -5,11 +5,11 @@
 
 #define HISTO_SIZE 256
 
-unsigned char get(cv::Mat patch, int i, int j);
-unsigned char get_texton(cv::Mat patch, int i, int j);
-std::vector<unsigned char> textonize(cv::Mat patch);
+unsigned char get(const cv::Mat &patch, int i, int j);
+unsigned char get_texton(const cv::Mat &patch, int i, int j);
+std::vector<unsigned char> textonize(const cv::Mat &patch);
 
 void build_histogram(const std::vector<unsigned char>& textonz,
-        cv::Mat mat, int i, int j);
+        const cv::Mat &mat, int i, int j);
 
-cv::Mat cpu_lbp(cv::Mat image);
+cv::Mat cpu_lbp(const cv::Mat &image);
