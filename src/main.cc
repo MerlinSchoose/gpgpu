@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
     CLI::App app{"gpgpu"};
     app.add_option("-i", inputfilename, "Input image");
-    app.add_set("-m", mode, {"GPU", "CPU"}, "Either 'GPU' or 'CPU'");
+    app.add_set("-m", mode, {"GPU", "CPU", "GPU-OPTI"}, "Either 'GPU', 'GPU-OPTI' or 'CPU'");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -42,6 +42,11 @@ int main(int argc, char** argv)
     else if (mode == "GPU")
     {
         gpu_lbp(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
+        histos_mat = bytes_to_mat(histos_buffer, cols, rows, image.type());
+    }
+    else if (mode == "GPU-OPTI")
+    {
+        gpu_lbp_opti(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
         histos_mat = bytes_to_mat(histos_buffer, cols, rows, image.type());
     }
     else

@@ -31,7 +31,7 @@ set(CMAKE_DEBUG_CXX_FlAGS "-fsanitize=address")
 
 find_package(OpenCV REQUIRED)
 
-add_library(lbp_lib SHARED src/gpu_lbp.cu)
+add_library(lbp_lib SHARED src/gpu_lbp.cu src/gpu_lbp_opti.cu src/utils_gpu.cu)
 target_compile_features(lbp_lib PUBLIC cxx_std_17)
 set_target_properties(lbp_lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

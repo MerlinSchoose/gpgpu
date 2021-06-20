@@ -1,10 +1,10 @@
 #include "gpu_lbp.hh"
 #include "utils_gpu.cuh"
 
-__global__ void kernel(unsigned char* image, int width, int height,
+
+__global__ void kernel_opti(unsigned char* image, int width, int height,
         size_t pitch, unsigned char *histos_buffer, size_t pitch_buffer) {
     __shared__ unsigned char tile[TILE_SIZE][TILE_SIZE];
-    __shared__ unsigned textonz[TILE_SIZE * TILE_SIZE];
     __shared__ unsigned histo[HISTO_SIZE];
 
     if (threadIdx.x == 0 && threadIdx.y == 0) {
@@ -21,12 +21,7 @@ __global__ void kernel(unsigned char* image, int width, int height,
     tile[threadIdx.x][threadIdx.y] = image[x + y * pitch];
     __syncthreads();
 
-    assert(threadIdx.x + threadIdx.y * blockDim.x < TILE_SIZE * TILE_SIZE);
-    textonz[threadIdx.x + threadIdx.y * blockDim.x] = get_texton(tile,
-            threadIdx.y, threadIdx.x);
-    __syncthreads();
-
-    atomicInc(&(histo[textonz[threadIdx.x + threadIdx.y * blockDim.x]]), 256);
+    atomicInc(&(histo[get_texton(tile,threadIdx.y, threadIdx.x)]), 256);
     __syncthreads();
 
     if (threadIdx.x == 0 && threadIdx.y == 0) {
@@ -38,7 +33,7 @@ __global__ void kernel(unsigned char* image, int width, int height,
     }
 }
 
-void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
+void gpu_lbp_opti(unsigned char *image, int image_cols, int image_rows,
         unsigned char *histos_buffer) {
     cudaError_t error = cudaSuccess;
 
@@ -71,7 +66,7 @@ void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
     if (error)
         abortError("Fail buffer copy to device");
 
-    kernel<<<blocks, threads>>>(dev_image, image_cols, image_rows, pitch_image,
+    kernel_opti<<<blocks, threads>>>(dev_image, image_cols, image_rows, pitch_image,
             dev_histos, pitch_histos);
     cudaDeviceSynchronize();
 

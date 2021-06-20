@@ -1,5 +1,6 @@
 #include "utils.hh"
 
+
 std::vector<unsigned char> mat_to_vect(cv::Mat image)
 {
     cv::Mat flat = image.reshape(1, image.total() * image.channels());
