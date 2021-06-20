@@ -13,11 +13,6 @@ FetchContent_Declare(
   URL https://github.com/CLIUtils/CLI11/archive/v1.8.0.tar.gz
   )
 
-FetchContent_Declare(
-  spdlog
-  URL https://github.com/gabime/spdlog/archive/v1.4.2.tar.gz
-  )
-
 if (NOT GoogleBenchmark_POPULATED)
     FetchContent_Populate(GoogleBenchmark)
     set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "From Gtest")
@@ -25,7 +20,6 @@ if (NOT GoogleBenchmark_POPULATED)
     add_subdirectory(${googlebenchmark_SOURCE_DIR} ${googlebenchmark_BINARY_DIR})
 endif()
 
-FetchContent_MakeAvailable(spdlog)
 FetchContent_MakeAvailable(CLI11)
 
 include_directories(include)
@@ -51,7 +45,6 @@ target_compile_features(test PUBLIC cxx_std_17)
 target_link_libraries(test
         lbp_lib
         "opencv_core;opencv_imgcodecs;opencv_highgui"
-        spdlog::spdlog
         CLI11::CLI11
         )
 
@@ -67,6 +60,5 @@ target_compile_features(bench PUBLIC cxx_std_17)
 target_link_libraries(bench
         lbp_lib
         "opencv_core;opencv_imgcodecs;opencv_highgui"
-        spdlog::spdlog
         benchmark
         )
