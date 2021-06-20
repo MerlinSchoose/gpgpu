@@ -5,7 +5,7 @@
 #include "gpu_lbp.hh"
 #include "utils.hh"
 
-std::string inputfilename = "../data/barcode-00-01.jpg";
+const std::string inputfilename = "../data/barcode-00-01.jpg";
 
 void BM_Rendering_cpu(benchmark::State& st)
 {
@@ -29,25 +29,26 @@ void BM_Rendering_gpu(benchmark::State& st)
     unsigned char *histos_buffer = (unsigned char *)
         malloc(rows * cols * sizeof(unsigned char));
 
-    for (auto _ : st)
+    for (auto _ : st) {
         gpu_lbp(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
+    }
 
     st.counters["frame_rate"] = benchmark::Counter(st.iterations(),
             benchmark::Counter::kIsRate);
+
+    free(histos_buffer);
 }
 void BM_Rendering_gpu_opti(benchmark::State& st)
 {
     cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
-    size_t rows = ((image.cols + TILE_SIZE - 1) / TILE_SIZE)
-        * ((image.rows + TILE_SIZE - 1) / TILE_SIZE);
-    size_t cols = HISTO_SIZE;
-
-    unsigned char *histos_buffer = (unsigned char *)
-        malloc(rows * cols * sizeof(unsigned char));
-
     for (auto _ : st)
-        gpu_lbp_opti(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
+    {
+        unsigned char *histos_dev;
+        size_t histos_pitch;
+        gpu_lbp_opti(mat_to_bytes(image), image.cols, image.rows, &histos_dev, &histos_pitch);
+        cudaFreeWrapper(histos_dev);
+    }
 
     st.counters["frame_rate"] = benchmark::Counter(st.iterations(),
             benchmark::Counter::kIsRate);

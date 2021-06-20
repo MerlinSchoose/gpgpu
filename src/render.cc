@@ -3,7 +3,7 @@
 
 #define TILE_SIZE 16
 
-cv::Mat render(const cv::Mat &image,const cv::Mat &histos)
+cv::Mat render(const cv::Mat &image, const cv::Mat &histos)
 {
     cv::Mat histos_f32;
     histos.convertTo(histos_f32, CV_32F);
@@ -12,12 +12,12 @@ cv::Mat render(const cv::Mat &image,const cv::Mat &histos)
     cv::RNG rng(13);
     for (size_t i = 0; i < color_tab.size(); i++)
         color_tab[i] = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
-                rng.uniform(0, 255));
+                                  rng.uniform(0, 255));
 
     cv::Mat centers;
     deserializeMat(centers, "../results/.centroids");
 
-   auto labels = nearest_neighbour(histos_f32, centers);
+    auto labels = nearest_neighbour(histos_f32, centers);
 
     cv::Mat labels_mat(image.rows, image.cols, CV_8UC3);
 

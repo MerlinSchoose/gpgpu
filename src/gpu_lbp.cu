@@ -90,8 +90,14 @@ void gpu_lbp(unsigned char *image, int image_cols, int image_rows,
         abortError("Unable to copy buffer back to memory");
 
     error = cudaFree(dev_image);
-    error = cudaFree(dev_histos);
 
     if (error)
         abortError("Unable to free memory");
+}
+
+void cudaFreeWrapper(void *histo_dev)
+{
+    cudaError_t error = cudaFree(histo_dev);
+    if (error)
+        abortError("cudaFreeWrapper failed");
 }
