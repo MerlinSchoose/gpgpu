@@ -1,5 +1,4 @@
 #include <CLI/CLI.hpp>
-#include <spdlog/spdlog.h>
 
 #include "cpu_lbp.hh"
 #include "gpu_lbp.hh"
@@ -52,7 +51,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::cout << histos_mat.row(1) << std::endl;
 
     auto labels_mat = render(image, histos_mat);
 

@@ -56,7 +56,7 @@ __device__ unsigned char get_texton(unsigned char patch[TILE_SIZE][TILE_SIZE],
 __global__ void kernel(unsigned char* image, int width, int height,
         size_t pitch, unsigned char *histos_buffer, size_t pitch_buffer) {
     __shared__ unsigned char tile[TILE_SIZE][TILE_SIZE];
-    __shared__ unsigned char textonz[TILE_SIZE * TILE_SIZE];
+    __shared__ unsigned textonz[TILE_SIZE * TILE_SIZE];
     __shared__ unsigned histo[HISTO_SIZE];
 
     if (threadIdx.x == 0 && threadIdx.y == 0) {
@@ -78,12 +78,12 @@ __global__ void kernel(unsigned char* image, int width, int height,
             threadIdx.y, threadIdx.x);
     __syncthreads();
 
-    atomicAdd(&(histo[textonz[threadIdx.x + threadIdx.y * blockDim.x]]), 1);
+    atomicInc(&(histo[textonz[threadIdx.x + threadIdx.y * blockDim.x]]), 256);
     __syncthreads();
 
     if (threadIdx.x == 0 && threadIdx.y == 0) {
         unsigned char *lineptr = histos_buffer + (blockIdx.x + blockIdx.y
-            * ((width) / blockDim.x)) * pitch_buffer;
+                * ((width) / blockDim.x)) * pitch_buffer;
 
         for (size_t i = 0; i < HISTO_SIZE; ++i)
             lineptr[i] = (unsigned char) histo[i];
