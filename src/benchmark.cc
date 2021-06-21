@@ -7,6 +7,7 @@
 #include "utils.hh"
 
 const std::string inputfilename = "../data/barcode-00-01.jpg";
+const std::string video_inputfilename = "../data/barcode-00.mp4";
 
 void BM_Pipeline_cpu(benchmark::State& st)
 {
@@ -137,6 +138,30 @@ BENCHMARK(BM_LBP_gpu)
 
 BENCHMARK(BM_LBP_gpu_opti)
 ->Unit(benchmark::kMillisecond)
+->UseRealTime();
+
+
+void BM_Pipeline_gpu_opti_video(benchmark::State& st)
+{
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    cv::Mat res;
+    for (auto _ : st)
+        res = video_render_and_save("/tmp/foo.mp4", "GPU-OPTI", video_inputfilename, colors, false);
+
+    free(res.data);
+
+    st.counters["fixme"] = benchmark::Counter(st.iterations(),
+                                              benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(BM_Pipeline_gpu_opti_video)
+->Unit(benchmark::kSecond)
 ->UseRealTime();
 
 BENCHMARK_MAIN();
