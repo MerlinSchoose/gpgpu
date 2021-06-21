@@ -58,11 +58,13 @@ int video_render_and_save(const std::string &output_path, const std::string &mod
     auto i = 0;
     while (true)
     {
-        cv::Mat frame;
-        video_capture >> frame;
+        cv::Mat rgb_frame, frame;
+        video_capture >> rgb_frame;
 
-        if (frame.empty())
+        if (rgb_frame.empty())
             break;
+
+        cv::cvtColor(rgb_frame, frame, cv::COLOR_BGR2GRAY);
 
         cv::Mat labels_mat;
         labels_mat = do_render(mode, frame, colors);
