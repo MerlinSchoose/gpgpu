@@ -91,7 +91,7 @@ int video_render_and_save(const std::string &output_path, const std::string &mod
     const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
 
     cv::VideoWriter video_output(output_path,
-                                 cv::VideoWriter::fourcc('M', 'P', '4', 'V'),
+                                 cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
                                  video_capture.get(cv::CAP_PROP_FPS),
                                  cv::Size(video_capture.get(cv::CAP_PROP_FRAME_WIDTH),
                                           video_capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
