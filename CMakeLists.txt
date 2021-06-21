@@ -27,7 +27,7 @@ FetchContent_MakeAvailable(CLI11)
 
 include_directories(include ${Boost_INCLUDE_DIRS}) 
 
-set(CMAKE_DEBUG_CXX_FlAGS "-fsanitize=address")
+set(CMAKE_CXX_FlAGS "-fsanitize=address")
 
 find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
@@ -42,6 +42,7 @@ set(SOURCES
   src/train_kmeans.cc
   src/nearest_neighbour.cc
   src/serialize.cc
+  src/pipeline.cc
   src/utils.cc)
 
 add_executable(train

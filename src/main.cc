@@ -1,51 +1,7 @@
 #include <CLI/CLI.hpp>
-#include <serialize.hh>
 
-#include "cpu_lbp.hh"
-#include "gpu_lbp.hh"
-#include "render.hh"
-#include "utils.hh"
-#include "render_gpu.hh"
+#include "pipeline.hh"
 
-
-cv::Mat do_cpu(cv::Mat image, unsigned char *colors)
-{
-    cv::Mat histos_mat = cpu_lbp(image);
-    return render(image, histos_mat, colors);
-}
-
-cv::Mat do_gpu(cv::Mat image, unsigned char *colors)
-{
-
-    size_t rows = ((image.cols + TILE_SIZE - 1) / TILE_SIZE)
-        * ((image.rows + TILE_SIZE - 1) / TILE_SIZE);
-    size_t cols = HISTO_SIZE;
-
-    unsigned char *histos_buffer = (unsigned char *)
-        malloc(rows * cols * sizeof(unsigned char));
-
-
-    gpu_lbp(mat_to_bytes(image), image.cols, image.rows, histos_buffer);
-    cv::Mat histos_mat = bytes_to_mat(histos_buffer, cols, rows, image.type());
-    cv::Mat labels_mat = render(image, histos_mat, colors);
-    free(histos_buffer);
-
-    return labels_mat;
-}
-
-cv::Mat do_gpu_opti(cv::Mat image, unsigned char *colors)
-{
-    unsigned char *histos_dev;
-    size_t histos_pitch;
-    gpu_lbp_opti(mat_to_bytes(image), image.cols, image.rows, &histos_dev, &histos_pitch);
-
-    cv::Mat centers;
-    deserializeMat(centers, "../results/.centroids");
-
-    auto labels_mat_arr = render_gpu(image.cols, image.rows, histos_dev, histos_pitch,
-            centers.ptr<float>(), colors);
-    return bytes_to_mat(labels_mat_arr, image.cols, image.rows, CV_8UC3);
-}
 
 /*
  * ./exe -m GPU 
@@ -75,28 +31,27 @@ int main(int argc, char** argv)
 
     unsigned char *colors = &color_tab[0];
 
-    cv::Mat labels_mat;
     if (mode == "CPU")
     {
-        labels_mat = do_cpu(image, colors);
+        auto labels_mat = pipepline_cpu(image, colors);
+        cv::imwrite(filename, labels_mat);
     }
     else if (mode == "GPU")
     {
-        labels_mat = do_gpu(image, colors);
+        auto labels_mat = pipepline_gpu(image, colors);
+        cv::imwrite(filename, labels_mat);
     }
     else if (mode == "GPU-OPTI")
     {
-        labels_mat = do_gpu_opti(image, colors);
+        auto labels_mat = pipepline_gpu_opti(image, colors);
+        cv::imwrite(filename, labels_mat);
+        free(labels_mat.data);
     }
     else
     {
         std::cerr << "Invalid argument";
         return 1;
     }
-
-
-    // Save
-    cv::imwrite(filename, labels_mat);
     std::cout << "Output saved in " << filename << "." << std::endl;
 
     return 0;

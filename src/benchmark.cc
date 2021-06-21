@@ -1,13 +1,86 @@
 #include <vector>
 #include <benchmark/benchmark.h>
 
+#include "pipeline.hh"
 #include "cpu_lbp.hh"
 #include "gpu_lbp.hh"
 #include "utils.hh"
 
 const std::string inputfilename = "../data/barcode-00-01.jpg";
 
-void BM_Rendering_cpu(benchmark::State& st)
+void BM_Pipeline_cpu(benchmark::State& st)
+{
+    cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
+
+
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    for (auto _ : st)
+        pipepline_cpu(image, colors);
+
+    st.counters["frame_rate"] = benchmark::Counter(st.iterations(),
+            benchmark::Counter::kIsRate);
+}
+
+void BM_Pipeline_gpu(benchmark::State& st)
+{
+    cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
+
+
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    for (auto _ : st)
+        pipepline_gpu(image, colors);
+
+    st.counters["frame_rate"] = benchmark::Counter(st.iterations(),
+            benchmark::Counter::kIsRate);
+}
+void BM_Pipeline_gpu_opti(benchmark::State& st)
+{
+    cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
+
+
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    cv::Mat res;
+    for (auto _ : st)
+        res = pipepline_gpu_opti(image, colors);
+
+    free(res.data);
+
+    st.counters["frame_rate"] = benchmark::Counter(st.iterations(),
+            benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(BM_Pipeline_cpu)
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
+
+BENCHMARK(BM_Pipeline_gpu)
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
+
+BENCHMARK(BM_Pipeline_gpu_opti)
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
+
+
+void BM_LBP_cpu(benchmark::State& st)
 {
     cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
@@ -18,7 +91,7 @@ void BM_Rendering_cpu(benchmark::State& st)
             benchmark::Counter::kIsRate);
 }
 
-void BM_Rendering_gpu(benchmark::State& st)
+void BM_LBP_gpu(benchmark::State& st)
 {
     cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
@@ -38,7 +111,7 @@ void BM_Rendering_gpu(benchmark::State& st)
 
     free(histos_buffer);
 }
-void BM_Rendering_gpu_opti(benchmark::State& st)
+void BM_LBP_gpu_opti(benchmark::State& st)
 {
     cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
@@ -54,15 +127,15 @@ void BM_Rendering_gpu_opti(benchmark::State& st)
             benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(BM_Rendering_cpu)
+BENCHMARK(BM_LBP_cpu)
 ->Unit(benchmark::kMillisecond)
 ->UseRealTime();
 
-BENCHMARK(BM_Rendering_gpu)
+BENCHMARK(BM_LBP_gpu)
 ->Unit(benchmark::kMillisecond)
 ->UseRealTime();
 
-BENCHMARK(BM_Rendering_gpu_opti)
+BENCHMARK(BM_LBP_gpu_opti)
 ->Unit(benchmark::kMillisecond)
 ->UseRealTime();
 
