@@ -8,7 +8,7 @@
 #include "render_gpu.hh"
 
 #include <string>
-
+#include <opencv2/videoio.hpp>
 
 cv::Mat do_cpu(cv::Mat image, unsigned char *colors)
 {
@@ -102,6 +102,42 @@ int main(int argc, char** argv)
     if (video_rendering)
     {
         // FIXME
+        cv::VideoCapture video_capture(inputfilename);
+        if (!video_capture.isOpened())
+        {
+            std::cerr  << "Could not open the input video: " << inputfilename << std::endl;
+            return 1;
+        }
+
+        const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
+
+        cv::VideoWriter video_output(output_path,
+                                     cv::VideoWriter::fourcc('M', 'P', '4', 'V'),
+                                     video_capture.get(cv::CAP_PROP_FPS),
+                                     cv::Size(video_capture.get(cv::CAP_PROP_FRAME_WIDTH),
+                                              video_capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
+
+        auto i = 0;
+        while (true)
+        {
+            cv::Mat frame;
+            video_capture >> frame;
+
+            if (frame.empty())
+                break;
+
+            cv::Mat labels_mat;
+            labels_mat = do_render("CPU", frame, colors);
+
+            // progress print
+            std::cout << "\r" << "[" << i++ << " / " << nb_frames << "] frames rendered" << std::flush;
+
+            video_output.write(labels_mat);
+        }
+        std::cout << std::endl;
+
+        video_capture.release();
+        video_output.release();
     }
     else
     {
