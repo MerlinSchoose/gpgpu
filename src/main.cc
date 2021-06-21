@@ -106,7 +106,7 @@ int video_render_and_save(const std::string &output_path, const std::string &mod
             break;
 
         cv::Mat labels_mat;
-        labels_mat = do_render("CPU", frame, colors);
+        labels_mat = do_render(mode, frame, colors);
 
         // progress print
         std::cout << "\r" << "[" << i++ << " / " << nb_frames << "] frames rendered" << std::flush;
