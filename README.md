@@ -12,9 +12,10 @@ make
 
 to train the k-means:
 ```
-./train data/*.jpg
+./train [data]
 ```
-
+(exemple : ./train data/\*.jpg)
+\
 to test the gpu optimized:
 ```
 ./test [-m GPU-OPTI][-i inputfile]
