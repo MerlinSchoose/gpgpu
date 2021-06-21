@@ -1,7 +1,6 @@
 #include "render_gpu.hh"
 #include "utils_gpu.cuh"
 
-#define K 16
 
 __global__ void nearest_neighbour(unsigned char *histos, unsigned width, unsigned height, size_t histos_pitch,
                                   float *centroids, size_t centroids_pitch, int *labels) {

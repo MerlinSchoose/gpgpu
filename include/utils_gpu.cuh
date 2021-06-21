@@ -4,7 +4,7 @@
 
 #define HISTO_SIZE 256
 #define TILE_SIZE 16
-
+#define K 32
 
 
 #define abortError(msg) _abortError(msg, __FUNCTION__, __LINE__)

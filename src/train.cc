@@ -6,8 +6,6 @@
 #include "serialize.hh"
 #include "train_kmeans.hh"
 
-#define K 16
-
 /*
  * ./exe -m GPU 
  * ./exe -m CPU

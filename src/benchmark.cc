@@ -6,8 +6,8 @@
 #include "gpu_lbp.hh"
 #include "utils.hh"
 
-const std::string inputfilename = "../data/barcode-00-01.jpg";
-const std::string video_inputfilename = "../data/barcode-00.mp4";
+const std::string inputfilename = "../data/barcode-09-01.jpg";
+const std::string video_inputfilename = "../data/barcode-09.mp4";
 
 void BM_Pipeline_cpu(benchmark::State& st)
 {
