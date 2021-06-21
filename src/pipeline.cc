@@ -108,6 +108,13 @@ int video_render_and_save(const std::string &output_path, const std::string &mod
         cv::Mat rgb_frame, frame;
         video_capture >> rgb_frame;
 
+        // BEGIN crappy shit
+        cv::imshow( "Frame", rgb_frame);
+        char c=(char)cv::waitKey(25);
+        if(c==27)
+            break;
+        // END
+
         if (rgb_frame.empty())
             break;
 
