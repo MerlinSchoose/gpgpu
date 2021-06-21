@@ -7,6 +7,8 @@
 #include "utils.hh"
 #include "render_gpu.hh"
 
+#include <string>
+
 
 cv::Mat do_cpu(cv::Mat image, unsigned char *colors)
 {
@@ -47,6 +49,22 @@ cv::Mat do_gpu_opti(cv::Mat image, unsigned char *colors)
     return bytes_to_mat(labels_mat_arr, image.cols, image.rows, CV_8UC3);
 }
 
+cv::Mat do_render(const std::string &mode, const cv::Mat &image, unsigned char *colors)
+{
+    cv::Mat labels_mat;
+
+    if (mode == "CPU")
+        labels_mat = do_cpu(image, colors);
+    else if (mode == "GPU")
+        labels_mat = do_gpu(image, colors);
+    else if (mode == "GPU-OPTI")
+        labels_mat = do_gpu_opti(image, colors);
+    else
+        exit(1);
+
+    return labels_mat;
+}
+
 /*
  * ./exe -m GPU 
  * ./exe -m CPU
@@ -54,7 +72,6 @@ cv::Mat do_gpu_opti(cv::Mat image, unsigned char *colors)
  */
 int main(int argc, char** argv)
 {
-
     std::string filename = "../results/output.png";
     std::string inputfilename = "../data/barcode-00-01.jpg";
     std::string mode = "GPU-OPTI";
@@ -65,9 +82,6 @@ int main(int argc, char** argv)
 
     CLI11_PARSE(app, argc, argv);
 
-    cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
-
-
     std::array<unsigned char, 16 * 3> color_tab = { 0 };
     cv::RNG rng(13);
     for (auto & color : color_tab)
@@ -75,25 +89,10 @@ int main(int argc, char** argv)
 
     unsigned char *colors = &color_tab[0];
 
-    cv::Mat labels_mat;
-    if (mode == "CPU")
-    {
-        labels_mat = do_cpu(image, colors);
-    }
-    else if (mode == "GPU")
-    {
-        labels_mat = do_gpu(image, colors);
-    }
-    else if (mode == "GPU-OPTI")
-    {
-        labels_mat = do_gpu_opti(image, colors);
-    }
-    else
-    {
-        std::cerr << "Invalid argument";
-        return 1;
-    }
+    cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
 
+    cv::Mat labels_mat;
+    labels_mat = do_render(mode, image, colors);
 
     // Save
     cv::imwrite(filename, labels_mat);
