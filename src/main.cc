@@ -72,7 +72,9 @@ cv::Mat do_render(const std::string &mode, const cv::Mat &image, unsigned char *
  */
 int main(int argc, char** argv)
 {
-    std::string filename = "../results/output.png";
+    const std::string output_dir = "../results/";
+    const std::string output_name = "output";
+
     std::string inputfilename = "../data/barcode-00-01.jpg";
     std::string mode = "GPU-OPTI";
 
@@ -89,14 +91,29 @@ int main(int argc, char** argv)
 
     unsigned char *colors = &color_tab[0];
 
-    cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
+    const auto input_extension = inputfilename.substr(inputfilename.find_last_of(".") + 1);
 
-    cv::Mat labels_mat;
-    labels_mat = do_render(mode, image, colors);
+    const bool video_rendering = input_extension == "mp4";
+    const std::string output_extension = video_rendering ? "mp4" : "png";
+    const std::string output_path = output_dir + output_name + "." + output_extension;
 
-    // Save
-    cv::imwrite(filename, labels_mat);
-    std::cout << "Output saved in " << filename << "." << std::endl;
+    std::cout << "Rendering mode : " << (video_rendering ? "video" : "image") << std::endl;
+
+    if (video_rendering)
+    {
+        // FIXME
+    }
+    else
+    {
+        cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
+
+        cv::Mat labels_mat;
+        labels_mat = do_render(mode, image, colors);
+
+        cv::imwrite(output_path, labels_mat);
+    }
+
+    std::cout << "Output saved in " << output_path << std::endl;
 
     return 0;
 }
