@@ -29,3 +29,9 @@ to test the cpu:
 ```
 ./test -m CPU [-i inputfile]
 ```
+
+
+to see the benchmark:
+```
+./bench
+```
