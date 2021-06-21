@@ -65,6 +65,64 @@ cv::Mat do_render(const std::string &mode, const cv::Mat &image, unsigned char *
     return labels_mat;
 }
 
+int image_render_and_save(const std::string &output_path, const std::string &mode, const std::string &filename, unsigned char *colors)
+{
+    const cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+
+    cv::Mat labels_mat;
+    labels_mat = do_render(mode, image, colors);
+
+    cv::imwrite(output_path, labels_mat);
+
+    std::cout << "Output saved in " << output_path << std::endl;
+
+    return 0;
+}
+
+int video_render_and_save(const std::string &output_path, const std::string &mode, const std::string &filename, unsigned char *colors)
+{
+    cv::VideoCapture video_capture(filename);
+    if (!video_capture.isOpened())
+    {
+        std::cerr  << "Could not open the input video: " << filename << std::endl;
+        return 1;
+    }
+
+    const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
+
+    cv::VideoWriter video_output(output_path,
+                                 cv::VideoWriter::fourcc('M', 'P', '4', 'V'),
+                                 video_capture.get(cv::CAP_PROP_FPS),
+                                 cv::Size(video_capture.get(cv::CAP_PROP_FRAME_WIDTH),
+                                          video_capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
+
+    auto i = 0;
+    while (true)
+    {
+        cv::Mat frame;
+        video_capture >> frame;
+
+        if (frame.empty())
+            break;
+
+        cv::Mat labels_mat;
+        labels_mat = do_render("CPU", frame, colors);
+
+        // progress print
+        std::cout << "\r" << "[" << i++ << " / " << nb_frames << "] frames rendered" << std::flush;
+
+        video_output.write(labels_mat);
+    }
+    std::cout << std::endl;
+
+    video_capture.release();
+    video_output.release();
+
+    std::cout << "Output saved in " << output_path << std::endl;
+
+    return 0;
+}
+
 /*
  * ./exe -m GPU 
  * ./exe -m CPU
@@ -77,8 +135,7 @@ int main(int argc, char** argv)
 
     std::string inputfilename = "../data/barcode-00-01.jpg";
     std::string mode = "GPU-OPTI";
-
-    CLI::App app{"gpgpu"};
+CLI::App app{"gpgpu"};
     app.add_option("-i", inputfilename, "Input image");
     app.add_set("-m", mode, {"GPU", "CPU", "GPU-OPTI"}, "Either 'GPU', 'GPU-OPTI' or 'CPU'");
 
@@ -100,56 +157,7 @@ int main(int argc, char** argv)
     std::cout << "Rendering mode : " << (video_rendering ? "video" : "image") << std::endl;
 
     if (video_rendering)
-    {
-        // FIXME
-        cv::VideoCapture video_capture(inputfilename);
-        if (!video_capture.isOpened())
-        {
-            std::cerr  << "Could not open the input video: " << inputfilename << std::endl;
-            return 1;
-        }
+        return video_render_and_save(output_path, mode, inputfilename, colors);
 
-        const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
-
-        cv::VideoWriter video_output(output_path,
-                                     cv::VideoWriter::fourcc('M', 'P', '4', 'V'),
-                                     video_capture.get(cv::CAP_PROP_FPS),
-                                     cv::Size(video_capture.get(cv::CAP_PROP_FRAME_WIDTH),
-                                              video_capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
-
-        auto i = 0;
-        while (true)
-        {
-            cv::Mat frame;
-            video_capture >> frame;
-
-            if (frame.empty())
-                break;
-
-            cv::Mat labels_mat;
-            labels_mat = do_render("CPU", frame, colors);
-
-            // progress print
-            std::cout << "\r" << "[" << i++ << " / " << nb_frames << "] frames rendered" << std::flush;
-
-            video_output.write(labels_mat);
-        }
-        std::cout << std::endl;
-
-        video_capture.release();
-        video_output.release();
-    }
-    else
-    {
-        cv::Mat image = cv::imread(inputfilename, cv::IMREAD_GRAYSCALE);
-
-        cv::Mat labels_mat;
-        labels_mat = do_render(mode, image, colors);
-
-        cv::imwrite(output_path, labels_mat);
-    }
-
-    std::cout << "Output saved in " << output_path << std::endl;
-
-    return 0;
+    return image_render_and_save(output_path, mode, inputfilename, colors);
 }
