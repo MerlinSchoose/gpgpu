@@ -113,7 +113,7 @@ int video_render_and_save(const std::string &output_path, const std::string &mod
 
         video_output.write(labels_mat);
     }
-    std::cout << std::endl;
+    std::cout << "\r" << nb_frames << " frames rendered" << std::endl;
 
     video_capture.release();
     video_output.release();
