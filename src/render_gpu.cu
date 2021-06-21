@@ -6,42 +6,40 @@
 __global__ void nearest_neighbour(unsigned char *histos, unsigned width, unsigned height, size_t histos_pitch,
                                   float *centroids, size_t centroids_pitch, int *labels) {
     __shared__ unsigned min_index;
-    __shared__ double min_dist;
-    __shared__ double dist[K][HISTO_SIZE];
+    __shared__ float min_dist;
+    __shared__ float dist[K];
 
-    if (threadIdx.x >= width || threadIdx.y >= height)
+    if (threadIdx.x >= width || blockIdx.y >= height)
         return;
 
     if (threadIdx.x == 0) {
         min_dist = INFINITY;
+        for (float & i : dist) {
+            i = 0;
+        }
     }
     __syncthreads();
 
     unsigned char *histo = histos + blockIdx.x * histos_pitch;
-    double val = (double) histo[threadIdx.x];
-
+    float val = (float) histo[threadIdx.x];
 
     for (int i = 0; i < K; ++i) {
         float *centroid = centroids + i * centroids_pitch / sizeof(float);
-        double diff = val - centroid[threadIdx.x];
+        float diff = val - centroid[threadIdx.x];
         diff *= diff;
-        dist[i][threadIdx.x] = diff;
+        atomicAdd(&dist[i], diff);
     }
 
     __syncthreads();
+
     if (threadIdx.x == 0) {
         for (int i = 0; i < K; ++i) {
-            double dist_tmp = 0;
-            for (int j = 0; j < blockDim.x; j++)
-            {
-                dist_tmp += dist[i][j];
-            }
+            float dist_tmp = dist[i];
             if (min_dist > dist_tmp) {
                 min_index = i;
                 min_dist = dist_tmp;
             }
         }
-        
         labels[blockIdx.x] = min_index;
     }
 }
