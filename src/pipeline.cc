@@ -1,4 +1,5 @@
 #include <opencv4/opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 #include <serialize.hh>
 
 #include "render.hh"
@@ -47,4 +48,91 @@ cv::Mat pipepline_gpu_opti(const cv::Mat &image, unsigned char *colors)
               centers.ptr<float>(), colors);
 
     return bytes_to_mat(labels_mat_arr, image.cols, image.rows, CV_8UC3);
+}
+
+cv::Mat do_render(const std::string &mode, const cv::Mat &image, unsigned char *colors)
+{
+    cv::Mat labels_mat;
+
+    if (mode == "CPU")
+        labels_mat = pipepline_cpu(image, colors);
+    else if (mode == "GPU")
+        labels_mat = pipepline_gpu(image, colors);
+    else if (mode == "GPU-OPTI")
+        labels_mat = pipepline_gpu_opti(image, colors);
+    else
+        exit(1);
+
+    return labels_mat;
+}
+
+int image_render_and_save(const std::string &output_path, const std::string &mode, const std::string &filename, unsigned char *colors)
+{
+    const cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+
+    cv::Mat labels_mat;
+    labels_mat = do_render(mode, image, colors);
+
+    cv::imwrite(output_path, labels_mat);
+
+    if (mode == "GPU-OPTI")
+        free(labels_mat.data);
+
+    std::cout << "Output saved in " << output_path << std::endl;
+
+    return 0;
+}
+
+int video_render_and_save(const std::string &output_path, const std::string &mode,
+                          const std::string &filename, unsigned char *colors,
+                          bool verbose)
+{
+    cv::VideoCapture video_capture(filename);
+    if (!video_capture.isOpened())
+    {
+        std::cerr  << "Could not open the input video: " << filename << std::endl;
+        return 1;
+    }
+
+    const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
+
+    cv::VideoWriter video_output(output_path,
+                                 cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
+                                 video_capture.get(cv::CAP_PROP_FPS),
+                                 cv::Size(video_capture.get(cv::CAP_PROP_FRAME_WIDTH),
+                                          video_capture.get(cv::CAP_PROP_FRAME_HEIGHT)));
+
+    auto i = 0;
+    while (true)
+    {
+        cv::Mat rgb_frame, frame;
+        video_capture >> rgb_frame;
+
+        if (rgb_frame.empty())
+            break;
+
+        cv::cvtColor(rgb_frame, frame, cv::COLOR_BGR2GRAY);
+
+        cv::Mat labels_mat;
+        labels_mat = do_render(mode, frame, colors);
+
+        // progress print
+        if (verbose)
+            std::cout << "\r" << "[" << i++ << " / " << nb_frames << "] frames rendered" << std::flush;
+
+        video_output.write(labels_mat);
+
+        if (mode == "GPU-OPTI")
+            free(labels_mat.data);
+    }
+    if (verbose)
+        std::cout << "\r" << nb_frames << " frames rendered" << std::endl;
+
+    video_capture.release();
+    video_output.release();
+
+    if (verbose)
+        std::cout << "Output saved in " << output_path << std::endl;
+
+    return 0;
 }

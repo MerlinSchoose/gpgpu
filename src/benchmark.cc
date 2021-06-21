@@ -7,6 +7,7 @@
 #include "utils.hh"
 
 const std::string inputfilename = "../data/barcode-00-01.jpg";
+const std::string video_inputfilename = "../data/barcode-00.mp4";
 
 void BM_Pipeline_cpu(benchmark::State& st)
 {
@@ -137,6 +138,99 @@ BENCHMARK(BM_LBP_gpu)
 
 BENCHMARK(BM_LBP_gpu_opti)
 ->Unit(benchmark::kMillisecond)
+->UseRealTime();
+
+void BM_Pipeline_cpu_video(benchmark::State& st)
+{
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    cv::Mat res;
+    for (auto _ : st)
+        res = video_render_and_save("/tmp/foo.mp4", "CPU", video_inputfilename, colors, false);
+
+    free(res.data);
+
+    cv::VideoCapture video_capture(video_inputfilename);
+    const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
+    const auto nb_fps = video_capture.get(cv::CAP_PROP_FPS);
+    video_capture.release();
+
+    st.counters["compute_fps/real_fps"] = benchmark::Counter(nb_frames * st.iterations() / nb_fps,
+                                                             benchmark::Counter::kIsRate);
+    st.counters["compute_fps"] = benchmark::Counter(nb_frames * st.iterations(),
+                                                    benchmark::Counter::kIsRate);
+    st.counters["real_fps"] = nb_fps;
+}
+
+void BM_Pipeline_gpu_video(benchmark::State& st)
+{
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    cv::Mat res;
+    for (auto _ : st)
+        res = video_render_and_save("/tmp/foo.mp4", "GPU", video_inputfilename, colors, false);
+
+    free(res.data);
+
+    cv::VideoCapture video_capture(video_inputfilename);
+    const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
+    const auto nb_fps = video_capture.get(cv::CAP_PROP_FPS);
+    video_capture.release();
+
+    st.counters["compute_fps/real_fps"] = benchmark::Counter(nb_frames * st.iterations() / nb_fps,
+                                                             benchmark::Counter::kIsRate);
+    st.counters["compute_fps"] = benchmark::Counter(nb_frames * st.iterations(),
+                                                    benchmark::Counter::kIsRate);
+    st.counters["real_fps"] = nb_fps;
+}
+
+void BM_Pipeline_gpu_opti_video(benchmark::State& st)
+{
+    std::array<unsigned char, 16 * 3> color_tab = { 0 };
+    cv::RNG rng(13);
+    for (auto & color : color_tab)
+        color = rng.uniform(0, 255);
+
+    unsigned char *colors = &color_tab[0];
+
+    cv::Mat res;
+    for (auto _ : st)
+        res = video_render_and_save("/tmp/foo.mp4", "GPU-OPTI", video_inputfilename, colors, false);
+
+    free(res.data);
+
+    cv::VideoCapture video_capture(video_inputfilename);
+    const auto nb_frames = video_capture.get(cv::CAP_PROP_FRAME_COUNT);
+    const auto nb_fps = video_capture.get(cv::CAP_PROP_FPS);
+    video_capture.release();
+
+    st.counters["compute_fps/real_fps"] = benchmark::Counter(nb_frames * st.iterations() / nb_fps,
+                                                             benchmark::Counter::kIsRate);
+    st.counters["compute_fps"] = benchmark::Counter(nb_frames * st.iterations(),
+                                            benchmark::Counter::kIsRate);
+    st.counters["real_fps"] = nb_fps;
+}
+
+BENCHMARK(BM_Pipeline_cpu_video)
+->Unit(benchmark::kSecond)
+->UseRealTime();
+
+BENCHMARK(BM_Pipeline_gpu_video)
+->Unit(benchmark::kSecond)
+->UseRealTime();
+
+BENCHMARK(BM_Pipeline_gpu_opti_video)
+->Unit(benchmark::kSecond)
 ->UseRealTime();
 
 BENCHMARK_MAIN();
