@@ -15,6 +15,7 @@ to train the k-means:
 ./train [data]
 ```
 (exemple : ./train data/\*.jpg)
+
 \
 to test the gpu optimized:
 ```
