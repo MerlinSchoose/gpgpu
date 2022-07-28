@@ -37,3 +37,9 @@ to see the benchmark:
 ```
 ./bench
 ```
+
+![](results/Slide13.jpg)
+![](results/Slide14.jpg)
+![](results/Slide15.jpg)
+![](results/Slide16.jpg)
+![](results/Slide17.jpg)
